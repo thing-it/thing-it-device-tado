@@ -1,0 +1,20 @@
+{
+  "name": "thing-it-device-tado",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/julianseibert/thing-it-device-tado"
+  },
+  "author": "Julian Seibert",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/julianseibert/thing-it-device-tado/issues"
+  },
+  "homepage": "https://github.com/julianseibert/thing-it-device-tado#readme",
+  "dependencies": {
+    "node-tado-client": "^0.1.1"
+  },
+  "devDependencies": {}
+}
