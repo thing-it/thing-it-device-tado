@@ -62,8 +62,8 @@ function TadoConnector() {
  *
  */
 TadoConnector.prototype.start = function () {
-    var q = require('q');
-    var deferred = q.defer();
+    let q = require('q');
+    let deferred = q.defer();
     const Tado = require('node-tado-client');
 
     if (this.isSimulated()) {
@@ -112,9 +112,6 @@ TadoConnector.prototype.start = function () {
                         }.bind(this),2000);
 
 
-
-
-
                     })
 
 
@@ -125,12 +122,9 @@ TadoConnector.prototype.start = function () {
                 this.publishOperationalStateChange();
             });
 
-
-        this.operationalState = {
-            status: "PENDING",
-            message: "INITIALIZING...",
-        };
-
+        this.operationalState.status = "PENDING";
+        this.operationalState.message = "INITIALIZING...";
+        this.publishOperationalStateChange();
 
         deferred.resolve();
     }
@@ -138,7 +132,7 @@ TadoConnector.prototype.start = function () {
     return deferred.promise;
 
 
-}
+};
 
 
 /**
@@ -147,7 +141,7 @@ TadoConnector.prototype.start = function () {
  */
 TadoConnector.prototype.stop = function () {
     //TODO;
-}
+};
 
 
 /**
@@ -157,7 +151,7 @@ TadoConnector.prototype.stop = function () {
  */
 TadoConnector.prototype.setState = function (state) {
     //TODO
-}
+};
 
 /**
  *
@@ -166,4 +160,4 @@ TadoConnector.prototype.setState = function (state) {
  */
 TadoConnector.prototype.getState = function () {
     return this.state;
-}
+};

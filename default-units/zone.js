@@ -5,7 +5,10 @@ module.exports = {
         role: "actor",
         family: "thermostat",
         deviceTypes: ["tado/tadoConnector"],
-        services: [],
+        services: [
+            //TODO
+            //identifyZoneDevices
+        ],
         events: [],
         state: [{
             id: 'temperature',
@@ -100,6 +103,7 @@ function Zone() {
                             this.state.openWindowDetected = res.setting.openWindow;
                             this.state.humidity = res.sensorDataPoints.insideTemperature.humidity.percentage;
 
+                            //SAMPLE RESPONSE
                             // { tadoMode: 'HOME',
                             //     geolocationOverride: false,
                             //     geolocationOverrideDisableTime: null,
@@ -136,7 +140,7 @@ function Zone() {
                             // ##############################
                         }
                     }).catch((err) => {
-                        this.logDebug("Error while updating Zone: ", err)
+                        this.logError("Error while updating Zone: ", err)
                     }
                 );
             }.bind(this));
@@ -170,11 +174,52 @@ function Zone() {
 
     };
 
+    /**
+     *
+     */
+    Zone.prototype.identifyZoneDevices = function () {
+        for (let deviceId of this.state.deviceId) {
+            this.device.tado.identifyDevice(deviceId)
+                .then((res) => {
+                    this.logDebug("Succseful identified device: ", deviceId);
+                })
+                .catch((err) => {
+                    this.logError("Device indetification unsucessful for device: ", deviceId, " with error: ", err);
+                });
+        }
+    };
+
+
+    /*
+    Thermostat.prototype.setState = function (state) {
+        this.logDebug('setState', state);
+        if (_.isObjectLike(state)) {
+            if (_.isNumber(state.setpoint) && state.setpoint !== this.state.setpoint) {
+                var delta = state.setpoint - this.state.setpoint;
+                this.setSetpointModification(delta);
+            }
+            this.state = _.cloneDeep(state);
+        } else {
+            this.state = {}
+        }
+    };
+    */
+
 
     /**
      *
      */
     Zone.prototype.setState = function (state) {
+        if ((state)) {
+            if (state.setpoint !== this.state.setpoint) {
+                this.device.tado.setZoneOverlay(this.configuration.homeId, this.configuration.zoneId, power, temperature, termination);
+            }
+
+        } else {
+            this.logError("Cannot setState without state");
+        }
+
+
         this.state = state;
     };
 
