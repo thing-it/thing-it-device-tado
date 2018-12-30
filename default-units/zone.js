@@ -55,13 +55,23 @@ module.exports = {
             label: 'Home ID',
             type: {
                 id: 'string'
-            }
+            },
+            defaultValue: '',
         }, {
             id: 'zoneId',
             label: 'Zone ID',
             type: {
                 id: 'string'
-            }
+            },
+            defaultValue: '',
+        }, {
+            id: 'pollingIntervalTime',
+            label: 'Polling Interval Time',
+            type: {
+                id: 'number'
+            },
+            unit: 's',
+            defaultValue: 10
         }]
     },
     create: function () {
@@ -92,7 +102,7 @@ function Zone() {
         }
         else {
 
-            this.updateInterval = setInterval(function () {
+            this.updateInterval = setInterval(() => {
                 this.device.tado.getZoneState(this.configuration.homeId, this.configuration.zoneId)
                     .then((res) => {
                         if (res) {
@@ -100,9 +110,15 @@ function Zone() {
                             this.state.setpoint = res.setting.temperature.celsius;
                             this.state.power = res.setting.power;
                             this.state.heatingPower = res.activityDataPoints.perceentage;
-                            this.state.openWindowDetected = res.setting.openWindow;
                             this.state.humidity = res.sensorDataPoints.insideTemperature.humidity.percentage;
 
+                            if (!this.state.openWindowDetected && res.setting.openWindow) {
+                                this.publishEvent("openWindowDetected");
+                            }
+
+                            this.state.openWindowDetected = res.setting.openWindow;
+
+                            this.publishStateChange();
                             //SAMPLE RESPONSE
                             // { tadoMode: 'HOME',
                             //     geolocationOverride: false,
@@ -139,11 +155,11 @@ function Zone() {
                             // }
                             // ##############################
                         }
-                    }).catch((err) => {
+                    })
+                    .catch((err) => {
                         this.logError("Error while updating Zone: ", err)
-                    }
-                );
-            }.bind(this));
+                    });
+            }, this.configuration.pollingIntervalTime);
 
 
             deferred.resolve();
@@ -161,50 +177,33 @@ function Zone() {
         return this.state;
     };
 
-    /**
-     *
-     */
-    Zone.prototype.update = function () {
+    // /**
+    //  *
+    //  */
+    // Zone.prototype.update = function () {
+    //
+    //     let deferred = q.defer();
+    //
+    //
+    //     return deferred.promise;
+    //
+    //
+    // };
 
-        let deferred = q.defer();
-        //TODO
-
-        return deferred.promise;
-
-
-    };
-
-    /**
-     *
-     */
-    Zone.prototype.identifyZoneDevices = function () {
-        for (let deviceId of this.state.deviceId) {
-            this.device.tado.identifyDevice(deviceId)
-                .then((res) => {
-                    this.logDebug("Succseful identified device: ", deviceId);
-                })
-                .catch((err) => {
-                    this.logError("Device indetification unsucessful for device: ", deviceId, " with error: ", err);
-                });
-        }
-    };
-
-
-    /*
-    Thermostat.prototype.setState = function (state) {
-        this.logDebug('setState', state);
-        if (_.isObjectLike(state)) {
-            if (_.isNumber(state.setpoint) && state.setpoint !== this.state.setpoint) {
-                var delta = state.setpoint - this.state.setpoint;
-                this.setSetpointModification(delta);
-            }
-            this.state = _.cloneDeep(state);
-        } else {
-            this.state = {}
-        }
-    };
-    */
-
+    // /**
+    //  * TODO
+    //  */
+    // Zone.prototype.identifyZoneDevices = function () {
+    //     for (let deviceId of this.state.deviceId) {
+    //         this.device.tado.identifyDevice(deviceId)
+    //             .then((res) => {
+    //                 this.logDebug("Succseful identified device: ", deviceId);
+    //             })
+    //             .catch((err) => {
+    //                 this.logError("Device indetification unsucessful for device: ", deviceId, " with error: ", err);
+    //             });
+    //     }
+    // };
 
     /**
      *
@@ -212,15 +211,18 @@ function Zone() {
     Zone.prototype.setState = function (state) {
         if ((state)) {
             if (state.setpoint !== this.state.setpoint) {
-                this.device.tado.setZoneOverlay(this.configuration.homeId, this.configuration.zoneId, power, temperature, termination);
+                this.device.tado.setZoneOverlay(this.configuration.homeId, this.configuration.zoneId, 'on', state.setpoint, 'auto')
+                    .then((resp) => {
+                        this.logInfo("Succseful adjusted setpoint to: ", state.setpoint);
+                        this.state = state;
+                    })
+                    .catch((err) => {
+                        this.logError("Cannot adjusted setpoint!");
+                    });
             }
-
         } else {
             this.logError("Cannot setState without state");
         }
-
-
-        this.state = state;
     };
 
     /**
@@ -230,7 +232,7 @@ function Zone() {
         if (this.isSimulated()) {
 
         } else {
-
+            clearInterval(this.updateInterval);
         }
     }
 }
