@@ -35,6 +35,13 @@ module.exports = {
             },
             defaultValue: '',
         }, {
+            label: 'Home ID',
+            id: 'homeId',
+            type: {
+                id: 'string',
+            },
+            defaultValue: '',
+        }, {
             label: 'Polling Interval',
             id: 'pollingInterval',
             type: {
@@ -52,7 +59,6 @@ module.exports = {
 };
 
 
-//todo needed?
 function TadoConnector() {
     this.state = {};
 }
@@ -79,40 +85,31 @@ TadoConnector.prototype.start = function () {
                 this.tado.getMe()
                     .then(resp => {
                         this.state.homes = resp.homes;
-                        console.log('##############################');
-                        console.log(' Homes #######################');
-                        console.log(this.state.homes);
-                        console.log('##############################');
-                        console.log('##############################');
 
                         if (!this.configuration.homeId) {
                             this.configuration.homeId = this.state.homes[0].id;
+                            this.logDebug("No HomeID configured. Set to the first found: ", this.configuration.homeId);
                         }
 
                         this.tado.getZones(this.configuration.homeId)
                             .then(resp => {
-                                console.log('##############################');
-                                console.log(' Zones #######################');
-                                this.state.zones = resp;
-                                console.log(this.state.zones);
-                                console.log('##############################');
-                                console.log('##############################');
+                                for (let zone of resp) {
+                                    this.state.zones.push({
+                                        id: zone.id,
+                                        name: zone.name
+                                    });
+
+                                }
+                                this.publishStateChange();
+                            })
+                            .catch((err) => {
+                                this.logError("Unable to get Zones with error: ", err);
                             });
 
-                        setInterval(function () {
-                            this.tado.getZoneState(this.configuration.homeId, '2')
-                                .then(resp => {
-                                    console.log('##############################');
-                                    console.log(' Zones #######################');
-                                    this.state.zones = resp;
-                                    console.log(this.state.zones.sensorDataPoints.insideTemperature.celsius);
-                                    console.log('##############################');
-                                    console.log('##############################');
-                                })
-                        }.bind(this),2000);
-
-
                     })
+                    .catch(err => {
+                        this.logError("Unable to connect to User: ", this.configuration.username, " with error: ", err);
+                    });
 
 
             })
