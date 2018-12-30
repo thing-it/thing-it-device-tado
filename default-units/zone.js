@@ -61,6 +61,12 @@ module.exports = {
             type: {
                 id: 'string',
             },
+        }, {
+            id: 'linkState',
+            label: 'Link State',
+            type: {
+                id: 'string',
+            },
         },],
         configuration: [{
             id: 'zoneId',
@@ -121,6 +127,7 @@ function Zone() {
                             this.state.power = res.setting.power;
                             this.state.heatingPower = res.activityDataPoints.heatingPower.percentage;
                             this.state.humidity = res.sensorDataPoints.humidity.percentage;
+                            this.state.linkState = res.link.state;
 
                             if (res.openWindow =! undefined) {
                                 if (!this.state.openWindowDetected) {
