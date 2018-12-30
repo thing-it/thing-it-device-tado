@@ -11,6 +11,12 @@ module.exports = {
         ],
         events: [],
         state: [{
+            id: 'zoneName',
+            label: 'Zone Name',
+            type: {
+                id: 'string',
+            },
+        }, {
             id: 'temperature',
             label: 'Temperature',
             type: {
@@ -60,14 +66,14 @@ module.exports = {
             id: 'zoneId',
             label: 'Zone ID',
             type: {
-                id: 'string'
+                id: 'integer'
             },
             defaultValue: '',
         }, {
             id: 'pollingIntervalTime',
             label: 'Polling Interval Time',
             type: {
-                id: 'number'
+                id: 'integer'
             },
             unit: 's',
             defaultValue: 10
@@ -97,6 +103,15 @@ function Zone() {
         }
         else {
 
+            this.device.tado.getZones(this.device.configuration.homeId)
+                .then(resp => {
+                    for (let zone of resp) {
+                        if (zone.id === this.configuration.zoneId) {
+                            this.state.zoneName = zone.name;
+                        }
+                    }
+                });
+
             this.updateInterval = setInterval(() => {
                 this.device.tado.getZoneState(this.configuration.homeId, this.configuration.zoneId)
                     .then((res) => {
@@ -107,7 +122,7 @@ function Zone() {
                             this.state.heatingPower = res.activityDataPoints.heatingPower.percentage;
                             this.state.humidity = res.sensorDataPoints.humidity.percentage;
 
-                            if (res.openWindow = !null) {
+                            if (res.openWindow =! undefined) {
                                 if (!this.state.openWindowDetected) {
                                     this.publishEvent("openWindowDetected");
                                 }
