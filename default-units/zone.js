@@ -44,6 +44,12 @@ module.exports = {
                 id: 'boolean',
             },
         }, {
+            id: 'openWindowDetectTimestamp',
+            label: 'Open Window detect Timestamp',
+            type: {
+                id: 'string',
+            },
+        }, {
             id: 'power',
             label: 'Power',
             type: {
@@ -101,11 +107,18 @@ function Zone() {
                             this.state.heatingPower = res.activityDataPoints.heatingPower.percentage;
                             this.state.humidity = res.sensorDataPoints.humidity.percentage;
 
-                            if (!this.state.openWindowDetected && res.setting.openWindow) {
-                                this.publishEvent("openWindowDetected");
+                            if (res.openWindow = !null) {
+                                if (!this.state.openWindowDetected) {
+                                    this.publishEvent("openWindowDetected");
+                                }
+                                this.state.openWindowDetected = true;
+                                this.state.openWindowDetectTimestamp = res.openWindow.detectedTime;
+                            } else {
+                                this.state.openWindowDetected = false;
+                                this.state.openWindowDetectTimestamp = '';
                             }
 
-                            this.state.openWindowDetected = res.setting.openWindow;
+                            this.state.openWindowDetected = res.openWindow;
 
                             this.publishStateChange();
                             //SAMPLE RESPONSE
