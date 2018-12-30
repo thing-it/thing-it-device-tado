@@ -84,10 +84,6 @@ function Zone() {
     Zone.prototype.start = function () {
         let deferred = q.defer();
 
-        // this.logLevel = 'debug';
-
-        //this.update();
-
         if (this.isSimulated()) {
 
             //TODO
@@ -170,18 +166,6 @@ function Zone() {
         return this.state;
     };
 
-    // /**
-    //  *
-    //  */
-    // Zone.prototype.update = function () {
-    //
-    //     let deferred = q.defer();
-    //
-    //
-    //     return deferred.promise;
-    //
-    //
-    // };
 
     // /**
     //  * TODO
