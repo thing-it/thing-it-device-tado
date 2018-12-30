@@ -51,13 +51,6 @@ module.exports = {
             },
         },],
         configuration: [{
-            id: 'homeId',
-            label: 'Home ID',
-            type: {
-                id: 'string'
-            },
-            defaultValue: '',
-        }, {
             id: 'zoneId',
             label: 'Zone ID',
             type: {
@@ -93,7 +86,7 @@ function Zone() {
 
         // this.logLevel = 'debug';
 
-        this.update();
+        //this.update();
 
         if (this.isSimulated()) {
 
@@ -109,8 +102,8 @@ function Zone() {
                             this.state.temperature = res.sensorDataPoints.insideTemperature.celsius;
                             this.state.setpoint = res.setting.temperature.celsius;
                             this.state.power = res.setting.power;
-                            this.state.heatingPower = res.activityDataPoints.perceentage;
-                            this.state.humidity = res.sensorDataPoints.insideTemperature.humidity.percentage;
+                            this.state.heatingPower = res.activityDataPoints.heatingPower.percentage;
+                            this.state.humidity = res.sensorDataPoints.humidity.percentage;
 
                             if (!this.state.openWindowDetected && res.setting.openWindow) {
                                 this.publishEvent("openWindowDetected");
@@ -211,7 +204,7 @@ function Zone() {
     Zone.prototype.setState = function (state) {
         if ((state)) {
             if (state.setpoint !== this.state.setpoint) {
-                this.device.tado.setZoneOverlay(this.configuration.homeId, this.configuration.zoneId, 'on', state.setpoint, 'auto')
+                this.device.tado.setZoneOverlay(this.device.configuration.homeId, this.configuration.zoneId, 'on', state.setpoint, 'auto')
                     .then((resp) => {
                         this.logInfo("Succseful adjusted setpoint to: ", state.setpoint);
                         this.state = state;
