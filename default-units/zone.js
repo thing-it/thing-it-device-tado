@@ -101,35 +101,29 @@ function Zone() {
      */
     Zone.prototype.start = function () {
         let deferred = q.defer();
-
+        this.state = {};
         if (this.isSimulated()) {
 
             //TODO
             deferred.resolve();
-        }
-        else {
-
-            this.device.tado.getZones(this.device.configuration.homeId)
-                .then(resp => {
-                    for (let zone of resp) {
-                        if (zone.id === this.configuration.zoneId) {
-                            this.state.zoneName = zone.name;
-                        }
-                    }
-                });
-
+        } else {
             this.updateInterval = setInterval(() => {
-                this.device.tado.getZoneState(this.configuration.homeId, this.configuration.zoneId)
+                this.device.tado.getZoneState(this.device.configuration.homeId, this.configuration.zoneId)
                     .then((res) => {
                         if (res) {
                             this.state.temperature = res.sensorDataPoints.insideTemperature.celsius;
-                            this.state.setpoint = res.setting.temperature.celsius;
-                            this.state.power = res.setting.power;
                             this.state.heatingPower = res.activityDataPoints.heatingPower.percentage;
+                            this.state.power = res.setting.power;
                             this.state.humidity = res.sensorDataPoints.humidity.percentage;
                             this.state.linkState = res.link.state;
 
-                            if (res.openWindow =! undefined) {
+                            if (res.setting.temperature) {
+                                this.state.setpoint = res.setting.temperature.celsius;
+                            } else {
+                                this.state.setpoint = 'n/a';
+                            }
+
+                            if (res.openWindow) {
                                 if (!this.state.openWindowDetected) {
                                     this.publishEvent("openWindowDetected");
                                 }
@@ -139,51 +133,13 @@ function Zone() {
                                 this.state.openWindowDetected = false;
                                 this.state.openWindowDetectTimestamp = '';
                             }
-
-                            this.state.openWindowDetected = res.openWindow;
-
                             this.publishStateChange();
-                            //SAMPLE RESPONSE
-                            // { tadoMode: 'HOME',
-                            //     geolocationOverride: false,
-                            //     geolocationOverrideDisableTime: null,
-                            //     preparation: null,
-                            //     setting:
-                            //     { type: 'HEATING',
-                            //         power: 'ON',
-                            //         temperature: { celsius: 20, fahrenheit: 68 } },
-                            //     overlayType: null,
-                            //         overlay: null,
-                            //     openWindow: null,
-                            //     nextScheduleChange:
-                            //     { start: '2018-12-11T17:00:00Z',
-                            //         setting: { type: 'HEATING', power: 'ON', temperature: [Object] } },
-                            //     link: { state: 'ONLINE' },
-                            //     activityDataPoints:
-                            //     { heatingPower:
-                            //     { type: 'PERCENTAGE',
-                            //         percentage: 0,
-                            //         timestamp: '2018-12-11T09:36:41.451Z' } },
-                            //     sensorDataPoints:
-                            //     { insideTemperature:
-                            //      { celsius: 21.5,
-                            //         fahrenheit: 70.7,
-                            //         timestamp: '2018-12-11T09:47:59.946Z',
-                            //         type: 'TEMPERATURE',
-                            //         precision: [Object] },
-                            //         humidity:
-                            //         { type: 'PERCENTAGE',
-                            //             percentage: 41.6,
-                            //             timestamp: '2018-12-11T09:47:59.946Z' }
-                            //      }
-                            // }
-                            // ##############################
                         }
                     })
                     .catch((err) => {
                         this.logError("Error while updating Zone: ", err)
                     });
-            }, this.configuration.pollingIntervalTime);
+            }, this.configuration.pollingIntervalTime * 1000);
 
 
             deferred.resolve();
@@ -229,7 +185,7 @@ function Zone() {
                         this.state = state;
                     })
                     .catch((err) => {
-                        this.logError("Cannot adjusted setpoint!");
+                        this.logDebug("Cannot adjusted setpoint!");
                     });
             }
         } else {
