@@ -123,6 +123,13 @@ function Zone() {
                                 this.state.setpoint = 'n/a';
                             }
 
+                            if (!this.state.zoneName) {
+                                let zone = this.device.state.zones.find((element) => {
+                                    return element.id === this.configuration.zoneId;
+                                });
+                                this.state.zoneName = zone.name;
+                            }
+
                             if (res.openWindow) {
                                 if (!this.state.openWindowDetected) {
                                     this.publishEvent("openWindowDetected");
