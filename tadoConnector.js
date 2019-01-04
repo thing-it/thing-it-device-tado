@@ -19,6 +19,23 @@ module.exports = {
             type: {
                 id: 'object',
             },
+        }, {
+            id: 'weatherState', label: 'Weather state',
+            type: {
+                id: 'string',
+            },
+        }, {
+            id: 'outsideTemperature', label: 'Outside temperature',
+            type: {
+                id: 'number',
+            },
+            unit: '°C'
+        }, {
+            id: 'solarIntensity', label: 'Solar intensity',
+            type: {
+                id: 'number',
+            },
+            unit: '%'
         }],
         configuration: [{
             label: 'Username (Email)',
@@ -42,10 +59,10 @@ module.exports = {
             },
             defaultValue: '',
         }, {
-            label: 'Polling Interval',
-            id: 'pollingInterval',
+            label: 'Weather update interval',
+            id: 'weatherUpdateInterval',
             type: {
-                id: 'number',
+                id: 'integer',
             },
             defaultValue: '10',
             unit: "s"
@@ -93,18 +110,32 @@ TadoConnector.prototype.start = function () {
 
                         this.tado.getZones(this.configuration.homeId)
                             .then(resp => {
+                                this.state.zones = [];
                                 for (let zone of resp) {
                                     this.state.zones.push({
                                         id: zone.id,
                                         name: zone.name
                                     });
-
                                 }
                                 this.publishStateChange();
                             })
                             .catch((err) => {
                                 this.logError("Unable to get Zones with error: ", err);
                             });
+
+                        this.weatherInterval = setInterval(() => {
+                            this.tado.getWeather(this.configuration.homeId)
+                                .then((res) => {
+                                    this.state.solarIntensity = res.solarIntensity.percentage;
+                                    this.state.outsideTemperature = res.outsideTemperature.celsius;
+                                    this.state.weatherState = res.weatherState.value;
+                                    this.publishStateChange();
+                                })
+                                .catch((err) => {
+                                    this.logDebug("Unable to update weather state with error: ", err);
+                                });
+                        }, this.configuration.weatherUpdateInterval * 1000);
+
 
                     })
                     .catch(err => {
