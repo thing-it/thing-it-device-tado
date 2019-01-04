@@ -124,10 +124,9 @@ function Zone() {
                             }
 
                             if (!this.state.zoneName) {
-                                let zone = this.device.state.zones.find((element) => {
-                                    return element.id === this.configuration.zoneId;
-                                });
-                                this.state.zoneName = zone.name;
+                                this.state.zoneName = this.device.state.zones.find((zone) => {
+                                    return zone.id === this.configuration.zoneId;
+                                }).name;
                             }
 
                             if (res.openWindow) {
