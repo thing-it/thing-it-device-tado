@@ -17,6 +17,12 @@ module.exports = {
                 id: 'string',
             },
         }, {
+            id: 'runningMode',
+            label: 'Running Mode',
+            type: {
+                id: 'string',
+            },
+        }, {
             id: 'temperature',
             label: 'Temperature',
             type: {
@@ -111,6 +117,7 @@ function Zone() {
                 this.device.tado.getZoneState(this.device.configuration.homeId, this.configuration.zoneId)
                     .then((res) => {
                         if (res) {
+                            this.state.runningMode = res.tadoMode;
                             this.state.temperature = res.sensorDataPoints.insideTemperature.celsius;
                             this.state.heatingPower = res.activityDataPoints.heatingPower.percentage;
                             this.state.power = res.setting.power;
