@@ -64,7 +64,7 @@ module.exports = {
             type: {
                 id: 'integer',
             },
-            defaultValue: '10',
+            defaultValue: 10,
             unit: "s"
         }],
     },
