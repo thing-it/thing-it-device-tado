@@ -1,8 +1,10 @@
 {
-  "name": "thing-it-device-tado",
+  "name": "@thing-it/device-tado",
   "version": "0.2.0",
   "description": "",
-  "scripts": {},
+  "scripts": {
+    "postversion": "git push && git push --tags && npm publish"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/julianseibert/thing-it-device-tado"
