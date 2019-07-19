@@ -87,10 +87,23 @@ function TadoConnector() {
 TadoConnector.prototype.start = function () {
     let q = require('q');
     let deferred = q.defer();
+
+    this.operationalState = {
+        status: 'PENDING',
+        message: 'Waiting for initialization...'
+    };
+    this.publishOperationalStateChange();
+
     const Tado = require('node-tado-client');
 
     if (this.isSimulated()) {
         this.logDebug("Starting Tado Connector in simulated mode.");
+
+        this.operationalState = {
+            status: 'OK',
+            message: 'Tado Connector successfully initialized'
+        }
+        this.publishOperationalStateChange();
 
         deferred.resolve();
     } else {
@@ -136,24 +149,31 @@ TadoConnector.prototype.start = function () {
                                 });
                         }, this.configuration.weatherUpdateInterval * 1000);
 
-
+                        this.operationalState = {
+                            status: 'OK',
+                            message: 'Tado Connector successfully initialized'
+                        }
+                        this.publishOperationalStateChange();
                     })
                     .catch(err => {
+                        this.operationalState = {
+                            status: 'ERROR',
+                            message: `Tado Connector Unable to connect to User: , ${this.configuration.username}`
+                        }
+                        this.publishOperationalStateChange();
+
                         this.logError("Unable to connect to User: ", this.configuration.username, " with error: ", err);
                     });
 
-
             })
             .catch(err => {
-                this.operationalState.status = "ERROR";
-                this.operationalState.message = err;
+                this.operationalState = {
+                    status: 'ERROR',
+                    message: 'Tado Connector initialization error'
+                }
                 this.publishOperationalStateChange();
             });
-
-        this.operationalState.status = "PENDING";
-        this.operationalState.message = "INITIALIZING...";
-        this.publishOperationalStateChange();
-
+        
         deferred.resolve();
     }
 

@@ -108,8 +108,19 @@ function Zone() {
     Zone.prototype.start = function () {
         let deferred = q.defer();
         this.state = {};
-        if (this.isSimulated()) {
+        
+        this.operationalState = {
+            status: 'PENDING',
+            message: 'Waiting for initialization...'
+        };
+        this.publishOperationalStateChange();
 
+        if (this.isSimulated()) {
+            this.operationalState = {
+                status: 'OK',
+                message: 'Zone successfully initialized'
+            }
+            this.publishOperationalStateChange();
             //TODO
             deferred.resolve();
         } else {
@@ -154,7 +165,12 @@ function Zone() {
                     });
             }, this.configuration.pollingIntervalTime * 1000);
 
-
+            this.operationalState = {
+                status: 'OK',
+                message: 'Zone successfully initialized'
+            }
+            this.publishOperationalStateChange();
+            
             deferred.resolve();
         }
 
