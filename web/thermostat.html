@@ -1,2 +1,5 @@
-<ti-thermostat state="component._state"
-               change="panel.callActorService(component, 'setState', component._state)"></ti-thermostat>
+<ti-thermostat [state]="component._state"
+               (change)="panel.callActorService(component, 'setState', component._state)"
+               (step)="panel.callActorService(component, 'setState', component._state)"
+               [options]="{ relativeSetpoint: component.configuration.relativeSetpoint, maxSetpoint: component.configuration.maxSetpoint, minSetpoint: component.configuration.minSetpoint, showTemperature: component.configuration.showTemp }"></ti-thermostat>
+
