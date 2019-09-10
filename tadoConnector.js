@@ -2,7 +2,7 @@ module.exports = {
   metadata: {
     plugin: 'tadoConnector',
     label: 'Tado Connector',
-    family: 'controller',
+    family: 'connector',
     actorTypes: [],
     sensorTypes: [],
     events: [],
