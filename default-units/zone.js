@@ -5,8 +5,7 @@ module.exports = {
     role: 'actor',
     family: 'thermostat',
     deviceTypes: ['tado/tadoConnector'],
-    services: [
-    ],
+    services: [],
     events: [],
     state: [{
       id: 'zoneName',
@@ -73,7 +72,7 @@ module.exports = {
       },
     }],
     configuration: [{
-      id: 'zoneId',
+      id: 'zoneId', //TODO Or Zone name. Invalid via OPS
       label: 'Zone ID',
       type: {
         id: 'integer',
@@ -134,76 +133,75 @@ function Zone() {
     this.state = {};
     if (this.isSimulated()) {
 
+      this.logInfo('Starting Zone in simulated mode.');
 
       deferred.resolve();
     } else {
-      this.device.tado.initialized
-        .then(() => {
-          this.updateInterval = setInterval(() => {
-            this.device.tado.getZoneState(this.configuration.zoneId)
-              .then((res) => {
-                if (res) {
-                  let oldState = _.clone(this.state);
+      this.device.tado.initialized.then(() => {
+        this.updateInterval = setInterval(() => {
+          this.device.tado.getZoneState(this.configuration.zoneId).then((res) => {
+            if (res) {
+              let oldState = _.clone(this.state);
 
-                  this.state.runningMode = res.tadoMode;
-                  this.state.temperature = res.sensorDataPoints.insideTemperature.celsius;
-                  this.state.heatingPower = res.activityDataPoints.heatingPower.percentage;
-                  this.state.power = res.setting.power;
-                  this.state.humidity = res.sensorDataPoints.humidity.percentage;
+              this.state.runningMode = res.tadoMode;
+              this.state.temperature = res.sensorDataPoints.insideTemperature.celsius;
+              this.state.heatingPower = res.activityDataPoints.heatingPower.percentage;
+              this.state.power = res.setting.power;
+              this.state.humidity = res.sensorDataPoints.humidity.percentage;
 
 
-                  this.state.linkState = res.link.state;
+              this.state.linkState = res.link.state;
 
-                  let oldOpState = _.clone(this.operationalState);
+              let oldOpState = _.clone(this.operationalState);
 
-                  if (this.state.linkState !== 'ONLINE') {
-                    this.operationalState.status = 'ERROR';
-                    this.operationalState.message = 'Thermostat offline';
-                  } else {
-                    this.operationalState.status = 'OK';
-                    this.operationalState.message = 'Thermostat online';
-                  }
+              if (this.state.linkState !== 'ONLINE') {
+                this.operationalState.status = 'ERROR';
+                this.operationalState.message = 'Thermostat offline';
+              } else {
+                this.operationalState.status = 'OK';
+                this.operationalState.message = 'Thermostat online';
+              }
 
-                  let newOpState = Helper.diff(this.operationalState, oldOpState);
-                  if (Object.keys(newOpState).length > 0 && newOpState.constructor === Object) {
-                    this.publishOperationalStateChange(newOpState);
-                  }
+              let newOpState = Helper.diff(this.operationalState, oldOpState);
+              if (Object.keys(newOpState).length > 0 && newOpState.constructor === Object) {
+                this.publishOperationalStateChange(newOpState);
+              }
 
+              if (res.setting.temperature) {
+                this.state.setpoint = res.setting.temperature.celsius;
+              } else {
+                this.state.setpoint = 0;
+              }
 
-                  if (res.setting.temperature) {
-                    this.state.setpoint = res.setting.temperature.celsius;
-                  } else {
-                    this.state.setpoint = 'n/a';
-                  }
+              if (!this.state.zoneName) {
+                this.state.zoneName = this.device.state.zones.find((zone) => {
+                  return zone.id === this.configuration.zoneId;
+                }).name;
+              }
 
-                  if (!this.state.zoneName) {
-                    this.state.zoneName = this.device.state.zones.find((zone) => {
-                      return zone.id === this.configuration.zoneId;
-                    }).name;
-                  }
-
-                  if (res.openWindow) {
-                    if (!this.state.openWindowDetected) {
-                      this.publishEvent('openWindowDetected');
-                    }
-                    this.state.openWindowDetected = true;
-                    this.state.openWindowDetectTimestamp = res.openWindow.detectedTime;
-                  } else {
-                    this.state.openWindowDetected = false;
-                    this.state.openWindowDetectTimestamp = '';
-                  }
-
-                  let newState = Helper.diff(this.state, oldState);
-                  if (Object.keys(newState).length > 0 && newState.constructor === Object) {
-                    this.publishStateChange(newState);
-                  }
+              if (res.openWindow) {
+                if (!this.state.openWindowDetected) {
+                  this.publishEvent('openWindowDetected');
                 }
-              })
-              .catch((err) => {
-                this.logError('Error while updating Zone: ', err);
-              });
-          }, this.configuration.pollingIntervalTime * 1000);
-        });
+                this.state.openWindowDetected = true;
+                this.state.openWindowDetectTimestamp = res.openWindow.detectedTime;
+              } else {
+                this.state.openWindowDetected = false;
+                this.state.openWindowDetectTimestamp = '';
+              }
+
+              this.publishStateChange();
+              //TODO disable to get more frequent data
+              // let newState = Helper.diff(this.state, oldState);
+              // if (Object.keys(newState).length > 0 && newState.constructor === Object) {
+              //   this.publishStateChange(newState);
+              // }
+            }
+          }).catch((err) => {
+            this.logError('Error while updating Zone: ', err);
+          });
+        }, this.configuration.pollingIntervalTime * 1000);
+      });
 
       deferred.resolve();
     }
