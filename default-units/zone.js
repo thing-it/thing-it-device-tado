@@ -25,6 +25,7 @@ module.exports = {
       type: {
         id: 'number',
       },
+      unit: '°C',
     }, {
       id: 'setpoint',
       label: 'Setpoint',
