@@ -16,7 +16,7 @@
   },
   "homepage": "https://github.com/julianseibert/thing-it-device-tado#readme",
   "dependencies": {
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "node-tado-client": "^0.2.0",
     "q": "^1.5.1"
   },
